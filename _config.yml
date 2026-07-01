@@ -659,7 +659,7 @@ artalk:
 # --------------------------------------
 
 chat:
-  # Choose: chatra/tidio/crisp
+  # Choose: chatra/tidio/crisp/knocket
   # Leave it empty if you don't need chat
   use:
   # Chat Button [recommend]
