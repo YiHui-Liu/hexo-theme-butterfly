@@ -1,5 +1,33 @@
 //- Knocket live chat — https://trtc.io/solutions/knocket
-//- Free-forever live chat widget. Renders only when theme.knocket.identifier is set.
-//- Get your own snippet/identifier at https://trtc.io/solutions/knocket
-if theme.knocket.identifier
-  script(src=`https://trtc.io/knocket-sdk/sdk.js?identifier=${theme.knocket.identifier}` async)
+script.
+  (() => {
+    const id = '#{theme.knocket.identifier}'
+    if (!id) return
+
+    btf.getScript(`https://trtc.io/knocket-sdk/sdk.js?identifier=${id}`).then(() => {
+      const isChatBtn = !{theme.chat.rightside_button}
+      const isChatHideShow = !{theme.chat.button_hide_show}
+
+      const getWidget = () => document.querySelector('#knocket-widget, [id*="knocket"]')
+
+      if (isChatBtn) {
+        const hide = () => { const w = getWidget(); if (w) w.style.display = 'none' }
+        const show = () => { const w = getWidget(); if (w) w.style.display = '' }
+
+        hide()
+
+        window.chatBtnFn = () => {
+          const w = getWidget()
+          if (w && w.style.display === 'none') show()
+          else hide()
+        }
+
+        document.getElementById('chat-btn').style.display = 'block'
+      } else if (isChatHideShow) {
+        window.chatBtn = {
+          hide: () => { const w = getWidget(); if (w) w.style.display = 'none' },
+          show: () => { const w = getWidget(); if (w) w.style.display = '' }
+        }
+      }
+    })
+  })()
