@@ -1,0 +1,44 @@
+//- Knocket live chat — https://trtc.io/solutions/knocket
+script.
+  (() => {
+    const id = '#{theme.knocket.identifier}'
+    if (!id) return
+
+    btf.getScript(`https://trtc.io/knocket-sdk/sdk.js?identifier=${id}`).then(() => {
+      const isChatBtn = !{theme.chat.rightside_button}
+      const isChatHideShow = !{theme.chat.button_hide_show}
+
+      const getWidget = () => document.getElementById('contact-widget-auto')
+
+      if (isChatBtn) {
+        const hide = () => { const w = getWidget(); if (w) w.style.display = 'none' }
+        const show = () => { const w = getWidget(); if (w) w.style.display = '' }
+
+        // Hide the native Knocket floating button
+        const observer = new MutationObserver(() => {
+          if (getWidget()) { hide(); observer.disconnect() }
+        })
+        observer.observe(document.body, { childList: true, subtree: true })
+        hide()
+
+        window.chatBtnFn = () => {
+          const w = getWidget()
+          if (!w) return
+          if (w.style.display === 'none') show()
+          else hide()
+        }
+
+        document.getElementById('chat-btn').style.display = 'block'
+      } else if (isChatHideShow) {
+        const observer = new MutationObserver(() => {
+          if (getWidget()) observer.disconnect()
+        })
+        observer.observe(document.body, { childList: true, subtree: true })
+
+        window.chatBtn = {
+          hide: () => { const w = getWidget(); if (w) w.style.display = 'none' },
+          show: () => { const w = getWidget(); if (w) w.style.display = '' }
+        }
+      }
+    })
+  })()

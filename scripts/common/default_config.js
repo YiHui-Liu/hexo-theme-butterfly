@@ -394,6 +394,9 @@ module.exports = {
   crisp: {
     website_id: null
   },
+  knocket: {
+    identifier: null
+  },
   google_tag_manager: {
     tag_id: null,
     domain: 'https://www.googletagmanager.com'
