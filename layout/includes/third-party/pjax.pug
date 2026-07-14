@@ -53,8 +53,9 @@ script.
     document.addEventListener('pjax:complete', () => {
       btf.removeGlobalFnEvent('pjaxCompleteOnce')
       document.querySelectorAll('script[data-pjax]').forEach(item => {
+        if (!item.parentNode) return
         const newScript = document.createElement('script')
-        const content = item.text || item.textContent || item.innerHTML || ""
+        const content = item.text || item.textContent || ''
         Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
         newScript.appendChild(document.createTextNode(content))
         item.parentNode.replaceChild(newScript, item)
@@ -68,6 +69,8 @@ script.
         !{theme.error_404 && theme.error_404.enable}
           ? pjax.loadUrl('!{url_for("/404.html")}')
           : window.location.href = e.request.responseURL
+      } else {
+        window.location.href = e.request.responseURL
       }
     })
   })
