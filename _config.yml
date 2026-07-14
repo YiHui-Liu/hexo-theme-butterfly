@@ -659,7 +659,7 @@ artalk:
 # --------------------------------------
 
 chat:
-  # Choose: chatra/tidio/crisp/knocket
+  # Choose: chatra/tidio/crisp
   # Leave it empty if you don't need chat
   use:
   # Chat Button [recommend]
@@ -679,10 +679,6 @@ tidio:
 # https://crisp.chat/en/
 crisp:
   website_id:
-
-# https://trtc.io/solutions/knocket
-knocket:
-  identifier:
 
 # --------------------------------------
 # Analysis
