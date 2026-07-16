@@ -12,6 +12,10 @@
 const urlFor = require('hexo-util').url_for.bind(hexo)
 const groups = {}
 
+hexo.extend.filter.register('before_generate', () => {
+  Object.keys(groups).forEach(k => delete groups[k])
+})
+
 hexo.extend.filter.register('before_post_render', data => {
   if (!hexo.theme.config.series.enable) return data
 
