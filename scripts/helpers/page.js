@@ -11,6 +11,8 @@ const colorPattern = /^(#|rgb|rgba|hsl|hsla)/i
 const simpleFilePattern = /\.(png|jpg|jpeg|gif|bmp|webp|svg|tiff)$/i
 const archiveRegex = /\/archives\//
 
+const { version: themeVersion } = require('../../package.json')
+
 hexo.extend.helper.register('truncate', truncateContent)
 
 hexo.extend.helper.register('postDesc', data => {
@@ -58,8 +60,6 @@ hexo.extend.helper.register('cloudTags', function (options = {}) {
 
   const userColors = normalizeColors(custom_colors)
 
-  const resolveColorClass = (idx) => `tag-color-${idx % userColors.length}`
-
   const generateStyle = (size, unit, page, color) => {
     const colorStyle = page === 'tags' ? `background-color: ${color};` : `color: ${color};`
     return `font-size: ${parseFloat(size.toFixed(2))}${unit}; ${colorStyle}`
@@ -70,10 +70,9 @@ hexo.extend.helper.register('cloudTags', function (options = {}) {
     const size = minfontsize + ((maxfontsize - minfontsize) * ratio)
 
     if (userColors && userColors.length) {
-      const colorClass = resolveColorClass(idx)
       const color = userColors[idx % userColors.length]
       const style = generateStyle(size, unit, page, color)
-      return `<a href="${env.url_for(tag.path)}" class="tag-cloud-item ${colorClass}" style="${style}">${tag.name}</a>`
+      return `<a href="${env.url_for(tag.path)}" class="tag-cloud-item" style="${style}">${tag.name}</a>`
     }
 
     const color = getRandomColor()
@@ -105,13 +104,13 @@ hexo.extend.helper.register('findArchivesTitle', function (page, menu, date) {
   if (!menu) return defaultTitle
 
   const loop = m => {
-    for (const key in m) {
-      if (typeof m[key] === 'object') {
-        const result = loop(m[key])
+    for (const [key, value] of Object.entries(m)) {
+      if (value && typeof value === 'object') {
+        const result = loop(value)
         if (result) return result
       }
 
-      if (archiveRegex.test(m[key])) {
+      if (typeof value === 'string' && archiveRegex.test(value)) {
         return key
       }
     }
@@ -154,9 +153,10 @@ hexo.extend.helper.register('shuoshuoFN', (data, page) => {
 
   // This is a hack method, because hexo treats time as UTC time
   // so you need to manually convert the time zone
+  const timezone = hexo.config.timezone
   processedData.forEach(item => {
-    const utcDate = moment.utc(item.date).format('YYYY-MM-DD HH:mm:ss')
-    item.date = moment.tz(utcDate, hexo.config.timezone).format('YYYY-MM-DD HH:mm:ss')
+    const parsed = moment.utc(item.date)
+    item.date = moment.tz(parsed.format('YYYY-MM-DD HH:mm:ss'), timezone).format('YYYY-MM-DD HH:mm:ss')
     // markdown
     item.content = hexo.render.renderSync({ text: item.content, engine: 'markdown' })
   })
@@ -179,8 +179,7 @@ hexo.extend.helper.register('getPageType', (page, isHome) => {
 })
 
 hexo.extend.helper.register('getVersion', () => {
-  const { version } = require('../../package.json')
-  return { hexo: hexo.version, theme: version }
+  return { hexo: hexo.version, theme: themeVersion }
 })
 
 hexo.extend.helper.register('safeJSON', data => {

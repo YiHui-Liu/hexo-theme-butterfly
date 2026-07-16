@@ -330,8 +330,8 @@ script.
       })
     }
 
-    const codeToMermaid = () => {
-      const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    const codeToMermaid = $article => {
+      const codeMermaidEle = $article.querySelectorAll('pre > code.mermaid')
       if (codeMermaidEle.length === 0) return
 
       codeMermaidEle.forEach(ele => {
@@ -347,8 +347,11 @@ script.
     }
 
     const loadMermaid = () => {
-      if (!{theme.mermaid.code_write}) codeToMermaid()
-      const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+      const $article = document.getElementById('article-container')
+      if (!$article) return
+
+      if (!{theme.mermaid.code_write}) codeToMermaid($article)
+      const $mermaid = $article.querySelectorAll('.mermaid-wrap')
       if ($mermaid.length === 0) return
 
       const runMermaidFn = () => runMermaid($mermaid)

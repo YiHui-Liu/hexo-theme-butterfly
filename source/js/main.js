@@ -267,18 +267,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const fetchUrl = async url => {
     try {
       const response = await fetch(url)
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
       return await response.json()
     } catch (error) {
       console.error('Failed to fetch URL:', error)
-      return []
+      throw error
     }
   }
 
   const runJustifiedGallery = (container, data, config) => {
-    const { isButton, limit, firstLimit, tabs } = config
+    const { isButton, tabs } = config
+    const limit = Math.max(1, Number(config.limit) || 20)
+    const firstLimit = Math.max(1, Number(config.firstLimit) || limit)
 
     const dataLength = data.length
-    const maxGroupKey = Math.ceil((dataLength - firstLimit) / limit + 1)
+    const maxGroupKey = dataLength
+      ? Math.ceil(Math.max(0, dataLength - firstLimit) / limit) + 1
+      : 0
 
     // Gallery configuration
     const igConfig = {
@@ -295,13 +300,19 @@ document.addEventListener('DOMContentLoaded', () => {
     let isLayoutHidden = false
 
     // Utility functions
-    const sanitizeString = str => (str && str.replace(/"/g, '&quot;')) || ''
+    const sanitizeString = str => String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
 
     const createImageItem = item => {
       const alt = item.alt ? `alt="${sanitizeString(item.alt)}"` : ''
       const title = item.title ? `title="${sanitizeString(item.title)}"` : ''
+      const url = item.url ? sanitizeString(item.url) : ''
       return `<div class="item">
-        <img src="${item.url}" data-grid-maintained-target="true" ${alt} ${title} />
+        <img src="${url}" data-grid-maintained-target="true" ${alt} ${title} />
       </div>`
     }
 
@@ -370,11 +381,13 @@ document.addEventListener('DOMContentLoaded', () => {
     btf.setLoading.add(container)
     ig.on('renderComplete', handleRenderComplete)
 
-    if (isButton) {
+    if (isButton && dataLength) {
       appendItems(1, firstLimit, true)
-    } else {
+    } else if (dataLength) {
       ig.on('requestAppend', handleRequestAppend)
       ig.renderItems()
+    } else {
+      btf.setLoading.remove(container)
     }
 
     btf.addGlobalFn('pjaxSendOnce', () => ig.destroy())
@@ -397,11 +410,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = element.firstElementChild
         const content = container.textContent
         container.textContent = ''
-        element.classList.add('loaded')
-
         try {
           const data = element.getAttribute('data-type') === 'url' ? await fetchUrl(content) : JSON.parse(content)
+          if (!Array.isArray(data)) throw new TypeError('Gallery data must be an array')
           runJustifiedGallery(container, data, config)
+          element.classList.add('loaded')
         } catch (error) {
           console.error('Gallery data parsing failed:', error)
         }
@@ -436,23 +449,19 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   const scrollFn = () => {
     const $rightside = document.getElementById('rightside')
-    const innerHeight = window.innerHeight + 56
     let initTop = 0
     const $header = document.getElementById('page-header')
-    const isChatBtn = typeof chatBtn !== 'undefined'
+    const isChatBtn = typeof window.chatBtn !== 'undefined'
     const isShowPercent = GLOBAL_CONFIG.percent.rightside
 
     // 檢查文檔高度是否小於視窗高度
     const checkDocumentHeight = () => {
-      if (document.body.scrollHeight <= innerHeight) {
+      if (document.body.scrollHeight <= window.innerHeight + 56) {
         $rightside.classList.add('rightside-show')
         return true
       }
       return false
     }
-
-    // 如果文檔高度小於視窗高度,直接返回
-    if (checkDocumentHeight()) return
 
     // find the scroll direction
     const scrollDirection = currentTop => {
@@ -463,6 +472,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let flag = ''
     const scrollTask = btf.rafThrottle(() => {
+      if (checkDocumentHeight()) return
+
       const currentTop = window.scrollY || document.documentElement.scrollTop
       const isDown = scrollDirection(currentTop)
       if (currentTop > 56) {
@@ -493,9 +504,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       isShowPercent && rightsideScrollPercent(currentTop)
-      checkDocumentHeight()
     })
 
+    checkDocumentHeight()
     btf.addEventListenerPjax(window, 'scroll', scrollTask, { passive: true })
   }
 
@@ -631,17 +642,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const handleThemeChange = mode => {
     const globalFn = window.globalFn || {}
-    const themeChange = globalFn.themeChange || {}
-    if (!themeChange) {
-      return
-    }
+    const themeChange = globalFn.themeChange
+    if (!themeChange) return
 
     Object.keys(themeChange).forEach(key => {
-      const themeChangeFn = themeChange[key]
+      const fn = themeChange[key]
+      if (typeof fn !== 'function') return
+
       if (['disqus', 'disqusjs'].includes(key)) {
-        setTimeout(() => themeChangeFn(mode), 300)
+        setTimeout(() => fn(mode), 300)
       } else {
-        themeChangeFn(mode)
+        fn(mode)
       }
     })
   }
@@ -952,7 +963,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const forPostFn = () => {
     const $article = document.getElementById('article-container')
-    if (!$article) return
+    if (!$article || $article.querySelector('.hbe-container')) return
 
     addHighlightTool($article)
     addPhotoFigcaption($article)

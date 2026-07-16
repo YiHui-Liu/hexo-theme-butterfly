@@ -1,14 +1,15 @@
 //- Knocket live chat — https://trtc.io/solutions/knocket
 script.
   (() => {
-    const id = '#{theme.knocket.identifier}'
-    if (!id) return
+    const identifier = !{JSON.stringify(theme.knocket.identifier || '').replace(/</g, '\\u003c')}
+    if (!identifier) return
 
-    btf.getScript(`https://trtc.io/knocket-sdk/sdk.js?identifier=${id}`).then(() => {
+    btf.getScript(`https://trtc.io/knocket-sdk/sdk.js?identifier=${encodeURIComponent(identifier)}`).then(() => {
       const isChatBtn = !{theme.chat.rightside_button}
       const isChatHideShow = !{theme.chat.button_hide_show}
 
-      const getWidget = () => document.getElementById('contact-widget-auto')
+      let widget = null
+      const getWidget = () => widget || (widget = document.getElementById('contact-widget-auto'))
 
       if (isChatBtn) {
         const hide = () => { const w = getWidget(); if (w) w.style.display = 'none' }
@@ -24,21 +25,18 @@ script.
         window.chatBtnFn = () => {
           const w = getWidget()
           if (!w) return
-          if (w.style.display === 'none') show()
-          else hide()
+          w.style.display = w.style.display === 'none' ? '' : 'none'
         }
 
-        document.getElementById('chat-btn').style.display = 'block'
+        const chatBtn = document.getElementById('chat-btn')
+        if (chatBtn) chatBtn.style.display = 'block'
       } else if (isChatHideShow) {
-        const observer = new MutationObserver(() => {
-          if (getWidget()) observer.disconnect()
-        })
-        observer.observe(document.body, { childList: true, subtree: true })
-
         window.chatBtn = {
           hide: () => { const w = getWidget(); if (w) w.style.display = 'none' },
           show: () => { const w = getWidget(); if (w) w.style.display = '' }
         }
       }
+    }).catch(error => {
+      console.warn('[Knocket] Failed to load the chat SDK.', error)
     })
   })()
