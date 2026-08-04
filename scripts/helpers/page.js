@@ -157,8 +157,40 @@ hexo.extend.helper.register('shuoshuoFN', (data, page) => {
   processedData.forEach(item => {
     const parsed = moment.utc(item.date)
     item.date = moment.tz(parsed.format('YYYY-MM-DD HH:mm:ss'), timezone).format('YYYY-MM-DD HH:mm:ss')
-    // markdown
+
+    // Render the content using Hexo's rendering engine to process any tags or markdown
+    const mockPost = {
+      content: item.content,
+      source: item.source || page.source || '',
+      full_source: page.full_source || '',
+      path: page.path || '',
+      layout: item.layout || page.layout || 'post',
+      raw: item.raw || item.content,
+      draft: false,
+      published: true
+    }
+    try {
+      hexo.execFilterSync('before_post_render', mockPost, { context: hexo })
+    } catch (e) {
+      // ignore third-party plugin errors, fallback to markdown-only rendering
+    }
+    item.content = mockPost.content
+
+    const codeBlocks = []
+    item.content = item.content.replace(/<hexoPostRenderCodeBlock>([\s\S]*?)<\/hexoPostRenderCodeBlock>/g, (_, c) => {
+      codeBlocks.push(c)
+      return `<!--CODEBLOCK_${codeBlocks.length - 1}-->`
+    })
+
+    try {
+      item.content = hexo.extend.tag.env.renderString(item.content, {})
+    } catch (e) {
+      // ignore tag plugin errors, fallback to markdown-only rendering
+    }
+
     item.content = hexo.render.renderSync({ text: item.content, engine: 'markdown' })
+
+    item.content = item.content.replace(/<!--CODEBLOCK_(\d+)-->/g, (_, i) => codeBlocks[+i])
   })
 
   return processedData
