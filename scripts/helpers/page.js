@@ -159,8 +159,21 @@ hexo.extend.helper.register('shuoshuoFN', (data, page) => {
     item.date = moment.tz(parsed.format('YYYY-MM-DD HH:mm:ss'), timezone).format('YYYY-MM-DD HH:mm:ss')
 
     // Render the content using Hexo's rendering engine to process any tags or markdown
-    const mockPost = { content: item.content }
-    hexo.execFilterSync('before_post_render', mockPost, { context: hexo })
+    const mockPost = {
+      content: item.content,
+      source: item.source || page.source || '',
+      full_source: page.full_source || '',
+      path: page.path || '',
+      layout: item.layout || page.layout || 'post',
+      raw: item.raw || item.content,
+      draft: false,
+      published: true
+    }
+    try {
+      hexo.execFilterSync('before_post_render', mockPost, { context: hexo })
+    } catch (e) {
+      // ignore third-party plugin errors, fallback to markdown-only rendering
+    }
     item.content = mockPost.content
 
     const codeBlocks = []

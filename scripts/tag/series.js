@@ -23,7 +23,7 @@ function buildSeriesGroups () {
       groups[p.series].push({
         title: p.title,
         path: p.path,
-        date: p.date.unix()
+        date: p.date.valueOf()
       })
     }
   }

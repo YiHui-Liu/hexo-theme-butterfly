@@ -378,6 +378,7 @@ module.exports = {
     server: null,
     site: null,
     visitor: false,
+    vote: false,
     option: null
   },
   chat: {
@@ -554,10 +555,6 @@ module.exports = {
   pjax: {
     enable: false,
     exclude: null
-  },
-  aplayerInject: {
-    enable: false,
-    per_page: true
   },
   snackbar: {
     enable: false,
