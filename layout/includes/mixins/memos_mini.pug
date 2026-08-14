@@ -1,0 +1,22 @@
+link(rel="stylesheet", href="/css/memos_mini.css", type="text/css")
+link(rel="stylesheet", href="https://cdn.staticfile.net/Swiper/10.3.1/swiper-bundle.min.css", type="text/css")
+.memos-mini.wow.animation-slide-in(data-wow-duration="1s" data-wow-delay="200ms" data-wow-offset="100" data-wow-iteration="1")
+    i.iconfont.icon-jike(title="即刻" onclick=`goMemos()` style="font-size: 1rem; margin-right: 0.5rem")
+    .swiper.swiper-no-swiping#memos(tabindex="-1" onclick=`goMemos()`)
+        .swiper-wrapper#memos-mini
+            .li-style.memos-loading(style="text-align: center") 正在加载...
+            script.
+                (async function () {
+                    const response = await fetch('!{url_for(theme.memos.link)}');
+                    const data = await response.json();
+                    const list = data.memos.slice(0, 10).map(item => {
+                        let data = item.content,
+                            content = data.replace(/#(.*?)\s|\n/g, '').replace(/\!\[(.*?)\]\((.*?)\)/g, '').replace(/\[(.*?)\]\((.*?)\)/g, `<a href="$2">@$1</a>`).trim();
+                            type = data.match(/\!\[(.*?)\]\((.*?)\)/g) ? '[图片]' : data.match(/{\s*music\s*(.*?)\s*(.*?)\s*}/g) ? '[音乐]' : data.match(/{\s*player\s*(.*)\s*}/g) || data.match(/{\s*bilibili\s*(.*?)\s*}/g) ? '[视频]' : '';
+                        if (item.resources)
+                            type = '[图片]';
+                        return `<div class="li-style swiper-slide" id="${item.name.replace("/", "-")}">${content + type}</div>`
+                    });
+                    document.querySelector('#memos-mini').innerHTML = list.join(' ');
+                })()
+    i.iconfont.icon-xiangyou(title="查看全文" onclick=`goMemos()` style="margin-left: 1rem")
