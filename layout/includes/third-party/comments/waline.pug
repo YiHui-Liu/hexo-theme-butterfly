@@ -13,9 +13,23 @@ script.
       const waline = Fn({
         el: el.querySelector('#waline-wrap'),
         serverURL: '!{serverURL}',
-        pageview: !{lazyload ? false : pageview},
+        pageview: location.hostname!=='localhost' && !{lazyload ? false : pageview},
         dark: 'html[data-theme="dark"]',
         comment: !{lazyload ? false : count},
+        imageUploader: (file) => {
+          let formData = new FormData();
+          let headers = new Headers();
+
+          formData.append('file', file);
+          headers.append('Authorization', '!{theme.waline.imageUploader.token}');
+          headers.append('Accept', 'application/json');
+
+          return fetch('!{theme.waline.imageUploader.url}', {
+            method: 'POST',
+            headers: headers,
+            body: formData
+          }).then(resp => resp.json()).then(resp => resp.data.links.url);
+        },
         ...option,
         path: isShuoshuo ? path : (option && option.path) || path
       })

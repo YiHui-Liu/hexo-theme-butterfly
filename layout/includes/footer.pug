@@ -16,24 +16,24 @@ if nav
                 else if subitem.title
                   div!= subitem.title
 .footer-other
-  .footer-copyright
     if owner.enable
-      - const currentYear = new Date().getFullYear()
-      - const sinceYear = owner.since
-      span.copyright
-        if sinceYear && sinceYear != currentYear
-          != `&copy;&nbsp;${sinceYear} - ${currentYear} By ${config.author}`
-        else
-          != `&copy;&nbsp;${currentYear} By ${config.author}`
-    if copyright.enable
-      - const v = copyright.version ? getVersion() : false
-      span.framework-info
-        if owner.enable && nav
+      .footer-copyright
+        - const currentYear = new Date().getFullYear()
+        - const sinceYear = owner.since
+        span.copyright
+          if sinceYear && sinceYear != currentYear
+            != `&copy;&nbsp;${sinceYear} - ${currentYear} By ${config.author}`
+          else
+            != `&copy;&nbsp;${currentYear} By ${config.author}`
+      if copyright.enable
+        - const v = copyright.version ? getVersion() : false
+        span.framework-info
+          if owner.enable && nav
+            span.footer-separator |
+          span= _p('footer.framework') + ' '
+          a(href='https://hexo.io')= `Hexo${ v ? ' ' + v.hexo : '' }`
           span.footer-separator |
-        span= _p('footer.framework') + ' '
-        a(href='https://hexo.io')= `Hexo${ v ? ' ' + v.hexo : '' }`
-        span.footer-separator |
-        span= _p('footer.theme') + ' '
-        a(href='https://github.com/jerryc127/hexo-theme-butterfly')= `Butterfly${ v ? ' ' + v.theme : '' }`
-  if theme.footer.custom_text
-    .footer_custom_text!= theme.footer.custom_text
+          span= _p('footer.theme') + ' '
+          a(href='https://github.com/jerryc127/hexo-theme-butterfly')= `Butterfly${ v ? ' ' + v.theme : '' }`
+    if theme.footer.custom_text
+      .footer_custom_text!= theme.footer.custom_text
